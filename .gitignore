@@ -1,21 +1,136 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+package Emailclient
 
-# Test binary, built with `go test -c`
-*.test
+import (
+	"fmt"
+	"time"
+)
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+type Email struct {
+	Sender    string
+	Recipient string
+	Subject   string
+	Body      string
+	Timestamp time.Time
+}
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+func (client *EmailClient) SendEmail() {
+	fmt.Print("Enter sender email: ")
+	var sender string
+	fmt.Scanln(&sender)
 
-# Go workspace file
-go.work
+	fmt.Print("Enter recipient email: ")
+	var recipient string
+	fmt.Scanln(&recipient)
+
+	fmt.Print("Enter subject: ")
+	var subject string
+	fmt.Scanln(&subject)
+
+	fmt.Print("Enter body: ")
+	var body string
+	fmt.Scanln(&body)
+
+	if _, ok := client.Users[sender]; !ok {
+		fmt.Println("Sender email not registered.")
+		return
+	}
+
+	if _, ok := client.Users[recipient]; !ok {
+		fmt.Println("Recipient email not registered.")
+		return
+	}
+
+	email := &Email{
+		Sender:    sender,
+		Recipient: recipient,
+		Subject:   subject,
+		Body:      body,
+		Timestamp: time.Now(),
+	}
+
+	client.Emails = append(client.Emails, email)
+
+	fmt.Println("Email sent successfully.")
+}
+
+func (client *EmailClient) ReadEmails() {
+	fmt.Print("Enter email: ")
+	var email string
+	fmt.Scanln(&email)
+
+	if _, ok := client.Users[email]; !ok {
+		fmt.Println("Email not registered.")
+		return
+	}
+
+	fmt.Println("Emails for", email, ":")
+	for _, email := range client.Emails {
+		if email.Recipient == email {
+			fmt.Println("From:", email.Sender)
+			fmt.Println("Subject:", email.Subject)
+			fmt.Println("Body:", email.Body)
+			fmt.Println("Timestamp:", email.Timestamp)
+			fmt.Println("-------------------------------------")
+		}
+	}
+}
+
+func (client *EmailClient) ReplyEmail() {
+	fmt.Print("Enter email: ")
+	var email string
+	fmt.Scanln(&email)
+
+	fmt.Print("Enter reply subject: ")
+	var replySubject string
+	fmt.Scanln(&replySubject)
+
+	fmt.Print("Enter reply body: ")
+	var replyBody string
+	fmt.Scanln(&replyBody)
+
+	if _, ok := client.Users[email]; !ok {
+		fmt.Println("Email not registered.")
+		return
+	}
+
+	fmt.Println("Enter email index to reply:")
+	var replyIndex int
+	fmt.Scanln(&replyIndex)
+	replyIndex -= 1
+
+	if replyIndex >= 0 && replyIndex < len(client.Emails) {
+		replyEmail := client.Emails[replyIndex]
+		sender := email
+		recipient := replyEmail.Sender
+		subject := "Re: " + replyEmail.Subject
+		body := fmt.Sprintf("On %s, %s wrote:\n%s\n\n%s wrote:\n%s", replyEmail.Timestamp, replyEmail.Sender, replyEmail.Body, email, replyBody)
+
+		client.SendEmail(sender, recipient, subject, body)
+		fmt.Println("Email replied successfully.")
+	} else {
+		fmt.Println("Invalid email index.")
+	}
+}
+
+func (client *EmailClient) DeleteEmail() {
+	fmt.Print("Enter email: ")
+	var email string
+	fmt.Scanln(&email)
+
+	if _, ok := client.Users[email]; !ok {
+		fmt.Println("Email not registered.")
+		return
+	}
+
+	fmt.Println("Enter email index to delete:")
+	var deleteIndex int
+	fmt.Scanln(&deleteIndex)
+	deleteIndex -= 1
+
+	if deleteIndex >= 0 && deleteIndex < len(client.Emails) {
+		client.Emails = append(client.Emails[:deleteIndex], client.Emails[deleteIndex+1:]...)
+		fmt.Println("Email deleted successfully.")
+	} else {
+		fmt.Println("Invalid email index.")
+	}
+}
